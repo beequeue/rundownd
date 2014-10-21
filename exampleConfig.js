@@ -33,22 +33,39 @@
     /*
      * The property name is the identifier for the dataset.  If you are
      * sending data to more than one dataset, you can specify which one using
-     * the special "rd-dataset" param
+     * the special "rd-dataset" param.
      */
     "default": {
 
       /*
-       * This array defines the valid paramaters for this dataset
+       * This array defines the valid paramaters for this dataset.  Any
+       * paramters not in this list will be silently ignored.
        */
-      "params": ["target", "project", "branch", "user"],
+      "params": ["target", "project", "branch", "user", "timestamp"],
 
       /*
-       * The views array allows you to define how the data will be displayed
+       * This array defines the compound key used to group events by for
+       * purposes of knowing how many events to keep historically.
+       */
+      "groupBy": ["target", "project"],
+
+      /*
+       * Number of events per groupBy to keep.
+       */
+      "keepCount": 3,
+
+      /*
+       * Method by which data is flushed to persistence
+       */
+      "flushMethod": "immediate",
+
+      /*
+       * The views array allows you to define how the data will be displayed.
        */
       "views": [
         {
           /*
-           * A title for the view
+           * A title for the view.
            */
           "title": "Platform Deployment Status",
 
