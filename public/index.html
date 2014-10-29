@@ -3,5 +3,18 @@
 </head>
 <body>
 <h1>RundownD</h1>
+
+<div id="rundown-container"></div>
+
+<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="assets/js/jquery-rundownd.js"></script>
+<script>
+$(document).ready(function() {
+    $('#rundown-container').rundownd({
+        socket: io()
+    });
+});
+</script>
 </body>
 </html>

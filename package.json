@@ -14,6 +14,7 @@
   "author": "Brendan Quigley",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.9.7"
+    "express": "^4.9.7",
+    "socket.io": "^1.2.0"
   }
 }

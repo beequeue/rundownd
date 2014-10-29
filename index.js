@@ -1,4 +1,3 @@
-var express = require('express');
 
 // Get config
 if (process.argv.length >= 3) {
@@ -7,17 +6,9 @@ if (process.argv.length >= 3) {
   config = require('./lib/config').getDefaults();
 }
 
-// Initialize Rundown module and API
-var rundown = require('./lib/rundown').init({config: config}),
-    api = require('./lib/api').init({rundown: rundown});
-
-var app = express();
-
-// Serve static files
-app.use(express.static(__dirname + '/public'));
-
-// API routing
-app.get('/notify', api.notify);
+// Initialize express
+var express = require('express'),
+    app = express();
 
 // Fire up server
 var server = app.listen(config.port, function () {
@@ -29,3 +20,14 @@ var server = app.listen(config.port, function () {
 
 });
 
+// Initialize Rundown module and API
+var io = require('socket.io').listen(server),
+    rundown = require('./lib/rundown').init({config: config, io: io}),
+    api = require('./lib/api').init({rundown: rundown});
+
+// Serve static files
+app.use(express.static(__dirname + '/public'));
+
+// API routing
+app.get('/notify', api.notify);
+app.get('/api/dataset/:name', api.getDataset);
