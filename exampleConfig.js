@@ -91,8 +91,16 @@
               "display": "Project"
             },
             {
-              "param": ["branch", "user", "timestamp"],
-              "display": "Current Deployment"
+              "param": "branch",
+              "display": "Branch"
+            },
+            {
+              "param": "user",
+              "display": "User"
+            },
+            {
+              "param": "timestamp",
+              "display": "When"
             }
           ]
         }
