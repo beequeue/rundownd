@@ -35,7 +35,8 @@
     init: function() {
 
       var opts = this.options,
-          self = this;
+          self = this,
+          el = $(this.element);
 
       // Get dataset config and current data
       $.ajax({
@@ -47,9 +48,23 @@
         console.log(resp);
 
         self.groupBy = resp.config.groupBy;
+        self.view = resp.config.views[0];
 
-        self.initTable(resp.config.views[0]);
-        self.hierarchy = self.refreshHierarchy(resp.data);
+        // Set up our data model
+        self.hierarchy = {
+          children: {},
+          rowspan: 0
+        };
+
+        // Set up our view
+        el.empty();
+
+        // Add a header
+        el.append($('<h1>' + self.view.title + '</h1>'));
+
+        // Set up the table
+        self.initTable(self.view);
+        self.refreshHierarchy(resp.data);
         self.refreshTableData(self.hierarchy);
 
       }).error(function() {
@@ -67,7 +82,70 @@
         }
 
         console.log(data);
+        self.processEvent(data);
+        console.log('Hierarchy:', self.hierarchy)
       });
+
+    },
+
+    isGroupByParam: function(param) {
+
+      return this.groupBy.indexOf(param) > -1;
+
+    },
+
+    /**
+     * Add the passed event to the hierarchy and update the table
+     */
+    processEvent: function(event) {
+
+      var self = this,
+          level = self.hierarchy,
+          groupCount = self.view.groups.length,
+          prevLevels = [],
+          paramVal,
+          i = 0,
+          prevLevelCount = 0,
+          group = null;
+
+      for (i = 0; i < groupCount; i++) {
+
+        group = self.view.groups[i];
+        paramVal = event[group.param];
+
+        // If this is NOT a group by param, we need to overwrite it
+        if (!self.isGroupByParam(group.param)) {
+          level.children = {};
+          level.rowspan = 0;
+        }
+
+        if (!level.children[paramVal]) {
+          level.children[paramVal] = {
+            children: {},
+            rowspan: 0,
+            param: group.param
+          }
+        }
+
+        // Add a reference for later
+        prevLevels.push(level);
+
+        // Is this a leaf node?
+        if (i == groupCount-1) {
+
+          // Increase the row count of each parent
+          prevLevels.forEach(function(prevLevel) {
+            prevLevel.rowspan++;
+          });
+
+        } else {
+
+          // Move to next level down
+          level = level.children[paramVal];
+
+        }
+
+      }
 
     },
 
@@ -80,14 +158,11 @@
           table = $('<table><thead><tr/></thead><tbody/></table>'),
           headTr = table.find('thead tr');
 
-      this.view = view;
-
       $.each(view.groups, function(idx, group) {
         var th = $('<th>' + group.display + '</th>').data('param', group.param);
         headTr.append(th);
       });
 
-      el.empty();
       el.append(table);
 
     },
@@ -113,10 +188,19 @@
     addNodeToTable: function(tbody, curTr, node) {
 
       var tr,
+          child,
           self = this,
           i = 0;
 
-      $.each(node.children, function(val, child) {
+      // We want the keys to be ordered alphabetically
+      var orderedKeys = Object.keys(node.children).sort();
+      if (!orderedKeys.length) {
+        return;
+      }
+
+      orderedKeys.forEach(function(val) {
+
+        child = node.children[val];
 
         // If we've already added the first item at this level, go to a new row
         if (!curTr || ++i > 1) {
@@ -142,59 +226,18 @@
     refreshHierarchy: function(data) {
 
       var self = this,
-          paramVal,
-          groupCount = self.view.groups.length,
-          hierarchy = {
-            children: {},
-            rowspan: 0
-          };
+          event;
 
       $.each(data, function(key, values) {
 
-        var level = hierarchy,
-            prevLevels = [],
-            ev = values[values.length-1],
-            i = 0,
-            prevLevelCount = 0,
-            group = null;
+        // Get the latest event for the group
+        event = values[values.length-1];
 
-        for (i = 0; i < groupCount; i++) {
+        self.processEvent(event);
 
-          group = self.view.groups[i];
-          paramVal = ev[group.param];
-
-          if (!level.children[paramVal]) {
-            level.children[paramVal] = {
-              children: {},
-              rowspan: 0
-            }
-          }
-
-          // Add a reference for later
-          prevLevels.push(level);
-
-          // Is this a leaf node?
-          if (i == groupCount-1) {
-
-            // Increase the row count of each parent
-            prevLevels.forEach(function(prevLevel) {
-              prevLevel.rowspan++;
-            });
-
-          } else {
-
-            // Move to next level down
-            level = level.children[paramVal];
-
-          }
-
-        }
-
-        // Move level back to top for next event sample
-        level = hierarchy;
       });
 
-      return hierarchy;
+      //return hierarchy;
     }
 
   };
