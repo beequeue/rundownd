@@ -34,9 +34,33 @@
      */
     init: function() {
 
-      var opts = this.options,
-          self = this,
-          el = $(this.element);
+      var self = this;
+      var opts = this.options;
+
+      // Do an initial pull on the data
+      self.refresh();
+
+      // Setup listener for incoming notifications
+      opts.socket.on('notify', function(data) {
+
+        // Check that this notification is meant for us
+        if (data['rd-dataset'] != opts.dataset) {
+          return;
+        }
+
+        self.refresh();
+      });
+
+    },
+
+    /**
+     * Do a full refresh of the UI
+     */
+    refresh: function() {
+
+      var self = this;
+      var opts = this.options;
+      var el = $(this.element);
 
       // Get dataset config and current data
       $.ajax({
@@ -44,8 +68,6 @@
         url: "api/dataset/" + opts.dataset
 
       }).success(function(resp) {
-
-        console.log(resp);
 
         self.groupBy = resp.config.groupBy;
         self.view = resp.config.views[0];
@@ -71,19 +93,6 @@
 
         console.log(error);
 
-      });
-
-      // Setup listener for incoming notifications
-      this.options.socket.on('notify', function(data) {
-
-        // Check that this notification is meant for us
-        if (data['rd-dataset'] != opts.dataset) {
-          return;
-        }
-
-        console.log(data);
-        self.processEvent(data);
-        console.log('Hierarchy:', self.hierarchy)
       });
 
     },
@@ -210,6 +219,11 @@
           tr = curTr;
         }
 
+        // Convert timestamps to... MySQL style datetime :)
+        if (child.param == 'timestamp') {
+          val = new Date(val*1000).toISOString().slice(0, 19).replace('T', ' ');
+        }
+
         var newCell = $('<td>' + val + '</td>').attr('rowspan', child.rowspan);
         tr.append(newCell);
 
@@ -225,19 +239,17 @@
      */
     refreshHierarchy: function(data) {
 
-      var self = this,
-          event;
+      var self = this;
+      var event;
 
       $.each(data, function(key, values) {
 
-        // Get the latest event for the group
+        // Get the latest event for the group and process it
         event = values[values.length-1];
-
         self.processEvent(event);
 
       });
 
-      //return hierarchy;
     }
 
   };
