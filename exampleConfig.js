@@ -75,11 +75,10 @@
            * table with large rows spans getting smaller as you go across.
            *
            * In the example below, we're asking for a view which puts Target as
-           * the first column, breaks that down by project in the second, then
-           * gives us a concatenation of branch, user and timestamp under the
-           * heading "Current Deployment" in the third column.  In this example
-           * there will be no extra row span in the second column - we're just
-           * using it for layout purposes.
+           * the first column, then breaks that down by project in the second,
+           * branch in the third, user in fourth and timestamp at the end.  In
+           * this example there will be no extra row span in the second column,
+           * we're just using it for layout purposes.
            */
           "groups": [
             {
