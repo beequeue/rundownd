@@ -58,6 +58,31 @@ gulp.task('gen-data-fixture', function() {
 
 });
 
+/**
+ * Generates simulated traffic based on the exampleConfig.js file
+ */
+gulp.task('demo-notify', function() {
+
+  setInterval(function() {
+      var t = fixtureSeeds.target.randomElement();
+      var p = fixtureSeeds.project.randomElement();
+      var b = fixtureSeeds.branch.randomElement();
+      var u = fixtureSeeds.user.randomElement();
+
+      var path = '/notify?target='+t+'&project='+p+'&branch='+b+'&user='+u;
+
+      console.log('Sending: '+path);
+
+      http.request({
+        hostname: 'localhost',
+        port: 3000,
+        path: path
+      }).end()
+
+  }, 5000);
+
+});
+
 gulp.task('default', function() {
   console.log('No default task');
 });
