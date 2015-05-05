@@ -1,5 +1,6 @@
 var gulp = require('gulp'),
     file = require('gulp-file'),
+    mocha = require('gulp-mocha'),
     http = require('http');
 
 
@@ -81,6 +82,14 @@ gulp.task('demo-notify', function() {
 
   }, 5000);
 
+});
+
+/**
+ * Runs the test suite
+ */
+gulp.task('test', function() {
+  return gulp.src('test/**/*Test.js', {read: false})
+    .pipe(mocha());
 });
 
 gulp.task('default', function() {
