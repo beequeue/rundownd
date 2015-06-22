@@ -221,7 +221,7 @@
 
         // Convert timestamps to... MySQL style datetime :)
         if (child.param == 'timestamp') {
-          val = new Date(val*1000).toISOString().slice(0, 19).replace('T', ' ');
+          val = new Date(val*1000).toLocaleString('en-GB');
         }
 
         var newCell = $('<td>' + val + '</td>').attr('rowspan', child.rowspan);
