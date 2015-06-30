@@ -46,15 +46,11 @@ table tr:last-child td {
 
 <div id="rundown-container"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.13.3/react.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.13.3/JSXTransformer.js"></script>
 <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
 <script src="/socket.io/socket.io.js"></script>
-<script src="assets/js/jquery-rundownd.js"></script>
-<script>
-$(document).ready(function() {
-    $('#rundown-container').rundownd({
-        socket: io()
-    });
-});
-</script>
+<script src="assets/jsx/rundown.jsx" type="text/jsx"></script>
+
 </body>
 </html>
