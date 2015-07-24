@@ -28,21 +28,20 @@ var RundownTable = React.createClass({
         });
 
         // Sort data and add cell collapse cues
-        reducedData = this.collapseData(this.sortData(reducedData));
+        reducedData = self.collapseData(this.sortData(reducedData));
 
-        this.setState({
+        self.setState({
           data: reducedData,
           config: resp.config,
           view: view
         });
 
         // Setup socket.io listener
-        this.props.socket.on('notify', this.onSocketNotify);
-
-      }.bind(this),
+        self.props.socket.on('notify', self.onSocketNotify);
+      },
       error: function(xhr, status, err) {
-        console.error(this.props.url, status, err.toString());
-      }.bind(this)
+        console.error(self.props.url, status, err.toString());
+      }
     });
   },
 
