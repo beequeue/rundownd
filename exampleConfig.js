@@ -83,11 +83,13 @@
           "groups": [
             {
               "param": "target",
-              "display": "Target"
+              "display": "Target",
+              "hasFilter": true
             },
             {
               "param": "project",
-              "display": "Project"
+              "display": "Project",
+              "hasFilter": true
             },
             {
               "param": "branch",
