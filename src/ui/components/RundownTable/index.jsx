@@ -1,69 +1,7 @@
-
-
-function RundownFilter(param, values) {
-
-  // The param we are filtering on
-  this.param = param;
-
-  // The list of possible values we can filter
-  this.values = values || [];
-
-  // The currently visible values
-  this.activeValues = [];
-
-  // Flag indicating whether we skip the filter and just show everything
-  // i.e. if true, the filter is bypassed.
-  this.showAll = false;
-
-};
-
-/**
- * Add a filter value to the list of possibles
- * @param {string} value The value to add
- * @param {bool}   checked Whether it is added as checked
- */
-RundownFilter.prototype.addValue = function(value, checked) {
-  if (this.values.indexOf(value) === -1) {
-    this.values.push(value);
-    this.values.sort();
-  }
-  if (checked) {
-    this.showValue(value);
-  } else {
-    this.hideValue(value);
-  }
-};
-
-/**
- * Set a value as being visible
- * @param  {string} value The value to make visible
- */
-RundownFilter.prototype.showValue = function(value) {
-  if (this.activeValues.indexOf(value) === -1) {
-    this.activeValues.push(value);
-  }
-};
-
-/**
- * Set a value as being hidden
- * @param  {string} value The value to hide
- */
-RundownFilter.prototype.hideValue = function(value) {
-  var index = this.activeValues.indexOf(value);
-  if (index > -1) {
-    this.activeValues.splice(index, 1);
-  }
-};
-
-/**
- * Return true if we're allowing the value through the filter
- * @param  {string} value The value to hide
- */
-RundownFilter.prototype.isActive = function(value) {
-  return (this.showAll || this.activeValues.indexOf(value) > -1);
-};
-
-//------------------------------------------------------------
+import React from 'react';
+import RundownFilter from '../../models/RundownFilter';
+import RundownTableHead from './TableHead.jsx';
+import RundownTableBody from './TableBody.jsx';
 
 var RundownTable = React.createClass({
 
@@ -223,7 +161,7 @@ var RundownTable = React.createClass({
       }
 
       // Get previous row for col-by-col comparison
-      prevItem = data[rowNum - 1];
+      var prevItem = data[rowNum - 1];
 
       // If the above cell is the same, we can collapse into it.
       for (var i = 0; i < item.cols.length; i++) {
@@ -261,7 +199,7 @@ var RundownTable = React.createClass({
    */
   reduceItem: function(key, item, groups) {
     var self = this;
-    reduced = {key: key, cols: [], collapses: []};
+    var reduced = {key: key, cols: [], collapses: []};
     groups.map(function(group) {
       var val = '';
       if (item[group.param]) {
@@ -341,173 +279,4 @@ var RundownTable = React.createClass({
 
 });
 
-//--------------------------------------------------------------------------
-
-var RundownTableHead = React.createClass({
-
-  getDefaultProps: function() {
-    return {
-      view: {}
-    };
-  },
-
-  handleFilterToggle: function(refName) {
-    this.refs[refName].toggleShowHide();
-  },
-
-  render: function() {
-    var self = this;
-    if (!this.props.view.groups) {
-      return (<thead/>);
-    }
-    var thNodes = this.props.view.groups.map(function(group) {
-
-      // Do we have a filter?
-      var filter;
-      var filterShowHide;
-      if (self.props.filters[group.param]) {
-        filter = <RundownTableFilter filter={self.props.filters[group.param]} 
-                                     table={self.props.table} 
-                                     ref={group.param}/>
-
-        // @todo Use a nice filter icon instead of this text
-        filterShowHide = <span className="filterShowHide" 
-                               onClick={self.handleFilterToggle.bind(self, group.param)}>
-                          [f]
-                         </span>
-      }
-
-      return (
-        <th key={group.param}>
-          {group.display} {filterShowHide}
-          {filter}
-        </th>
-      );
-    });
-    return (
-      <thead>
-        <tr>
-          {thNodes}
-        </tr>
-      </thead>
-    );
-  }
-});
-
-//--------------------------------------------------------------------------
-
-var RundownTableBody = React.createClass({
-
-  getInitialState: function() {
-    return {data: [], view: {}};
-  },
-
-  render: function() {
-    var self = this;
-    if (!this.props.data.length) {
-      return (<tbody/>);
-    }
-    var trNodes = this.props.data.map(function(item, i) {
-      return (
-        <RundownTableRow key={i} item={item} table={self.props.table} />
-      );
-    });
-    return (
-      <tbody>
-        {trNodes}
-      </tbody>
-    );
-  }
-});
-
-//--------------------------------------------------------------------------
-
-var RundownTableRow = React.createClass({
-
- render: function() {
-    var item = this.props.item;
-    var tdNodes = item.cols.map(function(val, i) {
-      // Is this column collapsed to the one above?
-      var cssClass = '';
-      if (item.collapses[i]) {
-        cssClass = 'collapsed';
-      }
-      return (
-        <td key={i} className={cssClass}>{val}</td>
-      );
-    });
-    return (
-      <tr className={item.isHidden ? "hidden" : ""}>
-        {tdNodes}
-      </tr>
-    );
-  }
-
-});
-
-//--------------------------------------------------------------------------
-
-var RundownTableFilter = React.createClass({
-
-  getInitialState: function() {
-    return {visible: false};
-  },
-
-  handleChange: function(event) {
-    var cb = event.target;
-    var filter = this.props.filter;
-    var table = this.props.table;
-
-    if (cb.checked) {
-      filter.showValue(cb.value);
-    } else {
-      filter.hideValue(cb.value);
-    }
-
-    table.repaint();
-  },
-
-  toggleShowHide: function() {
-    this.setState({visible: !this.state.visible});
-  },
-
-  render: function() {
-    var self = this;
-    var filter = this.props.filter;
-    var liNodes = filter.values.map(function(val, i) {
-      var cbName = filter.param + '_' + val;
-      return (
-        <li>
-          <input type="checkbox" 
-                 key={i} 
-                 id={cbName} 
-                 value={val} 
-                 onChange={self.handleChange}
-                 checked={filter.isActive(val)}
-          />
-          <label htmlFor={cbName}>{val}</label>
-        </li>
-      );
-    });
-
-    var cssClass = "filter";
-    if (!this.state.visible) {
-      cssClass += " hidden";
-    }
-
-    return (
-      <ul className={cssClass}>
-        {liNodes}
-      </ul>
-    );
-  }
-
-});
-
-
-//--------------------------------------------------------------------------
-
-React.render(
-  <RundownTable socket={io()} />,
-  document.getElementById('rundown-container')
-);
+export default RundownTable;
