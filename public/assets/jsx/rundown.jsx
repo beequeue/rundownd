@@ -12,7 +12,7 @@ function RundownFilter(param, values) {
   this.activeValues = [];
 
   // Flag indicating whether we skip the filter and just show everything
-  // i.e. if ture, the filter is bypassed.
+  // i.e. if true, the filter is bypassed.
   this.showAll = false;
 
 };
@@ -20,11 +20,17 @@ function RundownFilter(param, values) {
 /**
  * Add a filter value to the list of possibles
  * @param {string} value The value to add
+ * @param {bool}   checked Whether it is added as checked
  */
-RundownFilter.prototype.addValue = function(value) {
+RundownFilter.prototype.addValue = function(value, checked) {
   if (this.values.indexOf(value) === -1) {
     this.values.push(value);
     this.values.sort();
+  }
+  if (checked) {
+    this.showValue(value);
+  } else {
+    this.hideValue(value);
   }
 };
 
@@ -96,7 +102,7 @@ var RundownTable = React.createClass({
   updatefiltersFromItem: function(filters, item) {
     Object.keys(filters).forEach(function(key) {
       if (item[key]) {
-        filters[key].addValue(item[key]);
+        filters[key].addValue(item[key], true);
       }
     });
   },
@@ -174,8 +180,7 @@ var RundownTable = React.createClass({
     var filters = this.state.filters;
     var groups = this.state.view.groups;
     var filter, param;
-    console.log(filters);
-    console.log(groups);
+
     reducedData.map(function(item, rowNum, data) {
 
       for (var i = 0; i < item.cols.length; i++) {
@@ -196,7 +201,6 @@ var RundownTable = React.createClass({
         }
       }
 
-      //console.log(item);
     });
     return reducedData;
   },
@@ -223,7 +227,9 @@ var RundownTable = React.createClass({
 
       // If the above cell is the same, we can collapse into it.
       for (var i = 0; i < item.cols.length; i++) {
-        if (prevItem.cols[i] == item.cols[i]) {
+        var valueAboveIsSame = prevItem.cols[i] == item.cols[i];
+        var rowAboveIsVisible = !prevItem.isHidden;
+        if (valueAboveIsSame && rowAboveIsVisible) {
           item.collapses.push(true);
         } else {
           break; // We can't collapse a cell to the right of one that isn't collapsed
@@ -239,7 +245,7 @@ var RundownTable = React.createClass({
       <div>
         <h1>{this.state.view.title}</h1>
         <table>
-          <RundownTableHead view={this.state.view} filters={this.state.filters} />
+          <RundownTableHead view={this.state.view} filters={this.state.filters} table={this} />
           <RundownTableBody data={this.state.data} />
         </table>
       </div>
@@ -323,7 +329,7 @@ var RundownTable = React.createClass({
   repaint: function() {
     this.state.data = this.collapseData(this.filterData(this.sortData(this.state.data)));
     this.setState(this.state);
-  }
+  },
 
   /**
    * Handler for socket.io 'notify' event
@@ -345,6 +351,10 @@ var RundownTableHead = React.createClass({
     };
   },
 
+  handleFilterToggle: function(refName) {
+    this.refs[refName].toggleShowHide();
+  },
+
   render: function() {
     var self = this;
     if (!this.props.view.groups) {
@@ -353,14 +363,23 @@ var RundownTableHead = React.createClass({
     var thNodes = this.props.view.groups.map(function(group) {
 
       // Do we have a filter?
-      var filter = null;
+      var filter;
+      var filterShowHide;
       if (self.props.filters[group.param]) {
-        filter = <RundownTableFilter filter={self.props.filters[group.param]} />
+        filter = <RundownTableFilter filter={self.props.filters[group.param]} 
+                                     table={self.props.table} 
+                                     ref={group.param}/>
+
+        // @todo Use a nice filter icon instead of this text
+        filterShowHide = <span className="filterShowHide" 
+                               onClick={self.handleFilterToggle.bind(self, group.param)}>
+                          [f]
+                         </span>
       }
 
       return (
         <th key={group.param}>
-          {group.display}
+          {group.display} {filterShowHide}
           {filter}
         </th>
       );
@@ -384,12 +403,13 @@ var RundownTableBody = React.createClass({
   },
 
   render: function() {
+    var self = this;
     if (!this.props.data.length) {
       return (<tbody/>);
     }
     var trNodes = this.props.data.map(function(item, i) {
       return (
-        <RundownTableRow key={i} item={item} />
+        <RundownTableRow key={i} item={item} table={self.props.table} />
       );
     });
     return (
@@ -429,17 +449,26 @@ var RundownTableRow = React.createClass({
 
 var RundownTableFilter = React.createClass({
 
+  getInitialState: function() {
+    return {visible: false};
+  },
+
   handleChange: function(event) {
     var cb = event.target;
     var filter = this.props.filter;
+    var table = this.props.table;
+
     if (cb.checked) {
       filter.showValue(cb.value);
     } else {
       filter.hideValue(cb.value);
     }
 
-    console.log(filter.activeValues);
+    table.repaint();
+  },
 
+  toggleShowHide: function() {
+    this.setState({visible: !this.state.visible});
   },
 
   render: function() {
@@ -449,13 +478,25 @@ var RundownTableFilter = React.createClass({
       var cbName = filter.param + '_' + val;
       return (
         <li>
-          <input type="checkbox" key={i} id={cbName} value={val} onChange={self.handleChange}/>
+          <input type="checkbox" 
+                 key={i} 
+                 id={cbName} 
+                 value={val} 
+                 onChange={self.handleChange}
+                 checked={filter.isActive(val)}
+          />
           <label htmlFor={cbName}>{val}</label>
         </li>
       );
     });
+
+    var cssClass = "filter";
+    if (!this.state.visible) {
+      cssClass += " hidden";
+    }
+
     return (
-      <ul>
+      <ul className={cssClass}>
         {liNodes}
       </ul>
     );
