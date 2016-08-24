@@ -1,6 +1,6 @@
 
 var assert = require("assert"),
-	config = require("../../lib/config");
+	  config = require("../../../src/server/lib/config");
 
 describe('lib/config', function(){
 
@@ -13,7 +13,7 @@ describe('lib/config', function(){
     	  "c": 456
   		}
 	  };
-	  assert.deepEqual(config.load(__dirname + '/../_fixtures/config.js'), expected);
+	  assert.deepEqual(config.load(__dirname + '/../../_fixtures/config.js'), expected);
   	});
 
   });

@@ -2,9 +2,9 @@
   "name": "rundownd",
   "version": "0.0.0",
   "description": "Daemon to accept and display event notifications",
-  "main": "index.js",
+  "main": "src/server/index.js",
   "scripts": {
-    "start": "node index.js exampleConfig.js",
+    "start": "node src/server/index.js exampleConfig.js",
     "test": "gulp test"
   },
   "repository": {

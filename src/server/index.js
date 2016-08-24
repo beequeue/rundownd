@@ -26,7 +26,7 @@ var io = require('socket.io').listen(server),
     api = require('./lib/api').init({rundown: rundown});
 
 // Serve static files
-app.use(express.static(__dirname + '/public'));
+app.use(express.static(__dirname + '/../../public'));
 
 // API routing
 app.get('/notify', api.notify);
