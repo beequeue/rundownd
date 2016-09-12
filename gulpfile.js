@@ -1,3 +1,5 @@
+require('babel-core/register');
+
 var gulp = require('gulp'),
     file = require('gulp-file'),
     mocha = require('gulp-mocha'),
@@ -88,7 +90,7 @@ gulp.task('demo-notify', function() {
  * Runs the test suite
  */
 gulp.task('test', function() {
-  return gulp.src('test/**/*Test.js', {read: false})
+  return gulp.src('test/**/*Test.js*(x)', {read: false})
     .pipe(mocha());
 });
 
