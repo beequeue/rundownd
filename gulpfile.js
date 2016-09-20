@@ -1,8 +1,6 @@
-require('babel-core/register');
 
 var gulp = require('gulp'),
     file = require('gulp-file'),
-    mocha = require('gulp-mocha'),
     http = require('http');
 
 
@@ -49,8 +47,6 @@ gulp.task('gen-data-fixture', function() {
           timestamp: ts
         });
 
-        //console.log(t, p, b, u);
-
       }
 
     });
@@ -89,11 +85,40 @@ gulp.task('demo-notify', function() {
 /**
  * Runs the test suite
  */
-gulp.task('test', function() {
-  return gulp.src('test/**/*Test.js*(x)', {read: false})
-    .pipe(mocha());
-});
+gulp.task('test', require('gulp-jsx-coverage').createTask({
+    src: [
+      // Tests
+      'test/server/**/*Test.js',
+      'test/ui/**/*Test.js*(x)',
+      // Sources - added to get visibility of coverage
+      'src/server/lib/**/*.js',
+      'src/ui/components/**/*.jsx',
+      'src/ui/models/**/*.js'
+    ],
+    isparta: false,
+    istanbul: {
+        preserveComments: true, // required for istanbul 0.4.0+
+        coverageVariable: '__MY_TEST_COVERAGE__',
+        exclude: /node_modules|test/  // do not instrument these files
+    },
+    transpile: {
+        babel: {
+            include: /\.jsx?$/,
+            exclude: /node_modules/,
+            omitExt: false
+        }
+    },
+    coverage: {
+        reporters: ['text-summary', 'json', 'lcov'],
+        directory: 'coverage'
+    },
+    mocha: {
+        reporter: 'spec'
+    }
+}));
+
 
 gulp.task('default', function() {
   console.log('No default task');
 });
+
